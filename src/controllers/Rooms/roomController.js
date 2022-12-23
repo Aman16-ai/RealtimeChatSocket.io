@@ -1,7 +1,19 @@
-import { api_response, error_responses } from '../../../utility/responseHelper'
-import { userRooms } from '../../models/rooms'
+// import { uuid } from 'uuidv4'
+// import { api_response, error_responses } from '../../../utility/responseHelper'
+// import { userRooms } from '../../models/rooms'
 
-export const participantsRoom = async(req,res)=> {
+const uuid = require("uuidv4")
+const {api_response,error_responses} = require('../../../utility/responseHelper')
+const createRoom = async(user1,user2) => {
+    const uuid = uuid()
+    const room = await userRooms({
+        room_id:uuid,
+        participants:[user1,user2]
+    })
+    room.save();
+    return room;
+}
+module.exports = participantsRoom = async(req,res)=> {
     try {
         const {user1,user2} = req.body;
         const rooms = await userRooms.find({})
@@ -22,6 +34,8 @@ export const participantsRoom = async(req,res)=> {
                 }
             }
         })
+        const room = await createRoom(user1,user2)
+        res.send(api_response(false,{room:room}))
         
     }
     catch(err) {

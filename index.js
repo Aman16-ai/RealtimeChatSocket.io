@@ -1,9 +1,22 @@
 const express = require('express')
 const {Server} = require('socket.io')
 const http = require('http')
-
+const mongoose = require('mongoose')
+const dotenv = require('dotenv').config()
+const routes = require("./src/routes/mainRoutes")
+const db_url = process.env.MONGODB
 const app = express();
 const server = http.createServer(app)
+
+routes(app)
+
+mongoose.connect(db_url,{
+    useNewUrlParser:true,
+    useUnifiedTopology:true
+}, (err)=>{
+    console.log("Mongo db connection error", err)
+});
+
 
 app.get('/',(req,res)=> {
     return res.sendFile(__dirname+"/index.html")

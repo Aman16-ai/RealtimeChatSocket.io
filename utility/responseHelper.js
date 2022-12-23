@@ -1,13 +1,13 @@
-export const error_responses=(message)=>{
+module.exports = error_responses=(message)=>{
     return {'status':'error', 'response':message}
 }
 
-export const success_response=(message)=>{
+module.exports =  success_response=(message)=>{
     return {'status':'success', 'response':message}
 }
 
 
-export const api_response=(err, message)=>{
+module.exports =  api_response=(err, message)=>{
 
     if(err){
         return {'status':'error', 'response':message}
