@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime-chat</title>
+    <style>
+        .chat-container {
+            width: 80vw;
+            height: 80vh;
+            border: 2px solid red;
+            display: flex;
+        }
+        .left {
+            width: 30%;
+            height: 100%;
+            border: 2px solid green;
+            display: flex;
+            flex-direction: column;
+        }
+        .right {
+            width: 70%;
+            height: 100%;
+            border: 2px solid orange;
+            display: flex;
+            flex-direction: column;
+        }
+        .messages {
+            width: 100%;
+            height: 90%;
+            border: 2px solid blue;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <h1>Realtime chat</h1>
+        <input id="userin" type="text" name="username" placeholder="Enter username">
+        <input id="roomin" type="text" name="room" placeholder="Enter room">
+        <button id="btn" type="submit">submit</button>
+
+        <button class="user">Aman</button>
+        <button class="user">Rahul</button>
+        <button class="user">axat</button>
+        <div class="chat-container">
+            <div id="member" class="left">
+
+            </div>
+            <div class="right">
+                <div id="message-container" class="messages">
+
+                </div>
+                <div class="send-box">
+                    <input id="messagein" placeholder="Enter message" type="text">
+                    <button id="sendBtn">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var socket = io();
+            btn.addEventListener('click',()=> {
+                let name = document.getElementById('userin').value;
+                let room = document.getElementById('roomin').value;
+                console.log(name,room)
+                socket.emit('join_room',({name,room}))
+            })
+            socket.on('received_message_user',(data)=> {
+                console.log(data)
+                let memberContainer = document.getElementById('member');
+                const p = document.createElement('p');
+                p.innerText = data.message;
+                memberContainer.appendChild(p)
+            })
+
+            sendBtn.addEventListener('click',()=> {
+                let message = document.getElementById('messagein').value;
+                const p = document.createElement('p')
+                p.innerText = `Send By : You\n ${message}`
+                document.getElementById('message-container').appendChild(p)
+                socket.emit('send_message_one_to_one',message)
+            })
+            socket.on("received_message_one_to_one",(data)=> {
+                console.log(data)
+                const p = document.createElement('p')
+                p.innerText = `Send By : ${data.sender}\n ${data.message}`
+                const messageContainer = document.getElementById('message-container');
+                messageContainer.appendChild(p);
+            })
+
+            const users = document.getElementsByClassName('user');
+            for(let i = 0;i<users.length;i++) {
+                users[i].addEventListener('click',()=> {
+                    alert(users[i].innerText)
+                    let name = document.getElementById('userin').value;
+                    let sender_room = name + users[i].innerText
+                    let reciever_room = users[i].innerHTML + name
+
+                    socket.emit("join_one_to_one",{name,sender_room,reciever_room})
+                })
+            }
+            
+        </script>
+</body>
+</html>

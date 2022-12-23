@@ -1,0 +1,18 @@
+{
+  "name": "realtime-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aman saxena",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^6.8.1",
+    "nodemon": "^2.0.20",
+    "socket.io": "^4.5.4",
+    "uuidv4": "^6.2.13"
+  }
+}
