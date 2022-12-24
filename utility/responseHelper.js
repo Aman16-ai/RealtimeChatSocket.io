@@ -1,13 +1,12 @@
-module.exports = error_responses=(message)=>{
+error_responses=(message)=>{
     return {'status':'error', 'response':message}
 }
 
-module.exports =  success_response=(message)=>{
+success_response=(message)=>{
     return {'status':'success', 'response':message}
 }
 
-
-module.exports =  api_response=(err, message)=>{
+api_response=(err, message)=>{
 
     if(err){
         return {'status':'error', 'response':message}
@@ -15,3 +14,4 @@ module.exports =  api_response=(err, message)=>{
         return {'status':'success', 'response':message}
     }
 }
+module.exports = {success_response,error_responses,api_response}

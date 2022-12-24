@@ -1,5 +1,5 @@
 const roomRoutes = require('./roomRoutes')
 
-module.exports = routes = (app)=> {
+module.exports = (app)=> {
     roomRoutes(app)
 }

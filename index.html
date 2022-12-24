@@ -32,6 +32,7 @@
             border: 2px solid blue;
             display: flex;
             flex-direction: column;
+            overflow-y: scroll;
         }
     </style>
 </head>
@@ -41,9 +42,10 @@
         <input id="roomin" type="text" name="room" placeholder="Enter room">
         <button id="btn" type="submit">submit</button>
 
-        <button class="user">Aman</button>
-        <button class="user">Rahul</button>
+        <button class="user">aman</button>
+        <button class="user">rahul</button>
         <button class="user">axat</button>
+        <button class="user">vansh</button>
         <div class="chat-container">
             <div id="member" class="left">
 
@@ -86,23 +88,58 @@
             socket.on("received_message_one_to_one",(data)=> {
                 console.log(data)
                 const p = document.createElement('p')
-                p.innerText = `Send By : ${data.sender}\n ${data.message}`
+                p.innerText = `Send By : ${data.sent_by}\n ${data.message}`
                 const messageContainer = document.getElementById('message-container');
                 messageContainer.appendChild(p);
             })
 
             const users = document.getElementsByClassName('user');
             for(let i = 0;i<users.length;i++) {
-                users[i].addEventListener('click',()=> {
+                users[i].addEventListener('click',async()=> {
                     alert(users[i].innerText)
                     let name = document.getElementById('userin').value;
-                    let sender_room = name + users[i].innerText
-                    let reciever_room = users[i].innerHTML + name
-
-                    socket.emit("join_one_to_one",{name,sender_room,reciever_room})
+                    let friend = users[i].innerText
+                    const room_id = await getRoom({"user1":name,"user2":friend})
+                    console.log(room_id)
+                    const messages = await getAllChats(room_id)
+                   // let sender_room = name + users[i].innerText
+                    //let reciever_room = users[i].innerHTML + name
+                    buildMessageList(messages,name)
+                    socket.emit("join_one_to_one",{username:name,room_id:room_id})
                 })
             }
+            async function getRoom(users) {
+                const response = await fetch("http://localhost:4000/participantsRoom",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify(users)
+                })
+                const data = await response.json()
+                const room_id = data.response.room.room_id
+                return room_id
+            }
             
+            async function getAllChats(room_id) {
+                const response = await fetch(`http://localhost:4000/getAllChats/${room_id}`)
+                const data = await response.json();
+                console.log(data.response)
+                const messages = data.response?.messages
+                return messages
+            }
+            function buildMessageList(messages,currentUsername) {
+               messages?.forEach((messageObj)=> {
+               // console.log(messageObj)
+                const p = document.createElement('p')
+                let sent_by = messageObj.sent_by
+                let message_text = messageObj.message
+                if(messageObj.sent_by === currentUsername) sent_by = "You"
+                p.innerText = `Send By : ${sent_by}\n ${message_text}`
+                const messageContainer = document.getElementById('message-container');
+                messageContainer.appendChild(p);
+               })
+            }
         </script>
 </body>
 </html>

@@ -1,19 +1,18 @@
-// import { uuid } from 'uuidv4'
-// import { api_response, error_responses } from '../../../utility/responseHelper'
-// import { userRooms } from '../../models/rooms'
-
-const uuid = require("uuidv4")
+const {uuid} = require("uuidv4")
 const {api_response,error_responses} = require('../../../utility/responseHelper')
+const userRooms = require('../../models/rooms')
+
 const createRoom = async(user1,user2) => {
-    const uuid = uuid()
+    const room_id = uuid()
     const room = await userRooms({
-        room_id:uuid,
+        room_id:room_id,
         participants:[user1,user2]
     })
     room.save();
     return room;
 }
 module.exports = participantsRoom = async(req,res)=> {
+    console.log('running')
     try {
         const {user1,user2} = req.body;
         const rooms = await userRooms.find({})
@@ -28,14 +27,22 @@ module.exports = participantsRoom = async(req,res)=> {
                 }
                 if(participants[i] === user2) {
                     isUser2ExistsInRoom = true;
-                }
-                if(isUser1ExistsInRoom && isUser2ExistsInRoom) {
-                    res.send(api_response(false,{room:room}))
-                }
+                }  
+            }
+            if(isUser1ExistsInRoom && isUser2ExistsInRoom) {
+                console.log(isUser1ExistsInRoom,isUser2ExistsInRoom)
+                res.send(api_response(false,{room:room}))
+            }
+            else {
+                isUser1ExistsInRoom = false
+                isUser2ExistsInRoom = false
             }
         })
-        const room = await createRoom(user1,user2)
-        res.send(api_response(false,{room:room}))
+        
+        if(!(isUser1ExistsInRoom && isUser2ExistsInRoom)) {
+            const room = await createRoom(user1,user2)
+            res.send(api_response(false,{room:room}))
+        }
         
     }
     catch(err) {
