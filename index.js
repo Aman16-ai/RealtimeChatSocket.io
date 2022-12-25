@@ -64,6 +64,8 @@ io.on('connection',(socket)=> {
         // const name = data.name;
         const room_id = data.room_id
         const username = data.username
+        const s = data.s
+        const r = data.r
         // console.log(name,sr,rr)
         // socket.join([sr,rr])
         socket.join(room_id)
@@ -77,11 +79,14 @@ io.on('connection',(socket)=> {
             // socket.to(data.sender_room).emit("received_message_one_to_one",message)
             socket.to(room_id).emit('received_message_one_to_one',message)
         })
+
+        socket.on('leaveRoom',()=> {
+            console.log("leaving room",room_id)
+            // socket.leave(room_id)
+            socket.disconnect()
+        })
     })
-    socket.on('leaveRoom',(room)=> {
-        console.log("leaving room",room)
-        socket.leave(room)
-    })
+    
 
 })
 

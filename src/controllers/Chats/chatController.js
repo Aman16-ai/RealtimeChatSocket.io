@@ -10,7 +10,7 @@ const getRoomAllChats = async (req,res) => {
             path:"messages",
             Model:"Messages"
         })
-        console.log(userchats)
+        // console.log(userchats)
         res.send(api_response(false,userchats))
     }
     catch(err) {
@@ -21,7 +21,7 @@ const getRoomAllChats = async (req,res) => {
 const saveMessageToRoom = async (room_id,message)=> {
     try {
         const chat = await chats.findOne({room_id:room_id})
-        console.log(chat)
+        // console.log(chat)
         const message_id = uuid()
         message.message_id = message_id
         const newMessage = await messages(message)

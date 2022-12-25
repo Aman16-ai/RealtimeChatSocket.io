@@ -16,7 +16,7 @@ module.exports = participantsRoom = async(req,res)=> {
     try {
         const {user1,user2} = req.body;
         const rooms = await userRooms.find({})
-        console.log(rooms)
+        // console.log(rooms)
         let isUser1ExistsInRoom = false;
         let isUser2ExistsInRoom = false;
         rooms.forEach((room)=> {

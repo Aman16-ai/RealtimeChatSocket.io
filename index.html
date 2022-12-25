@@ -46,6 +46,7 @@
         <button class="user">rahul</button>
         <button class="user">axat</button>
         <button class="user">vansh</button>
+        <button id="disbtn">Disconnect</button>
         <div class="chat-container">
             <div id="member" class="left">
 
@@ -64,6 +65,12 @@
         <script src="/socket.io/socket.io.js"></script>
         <script>
             var socket = io();
+            let previousRoom = null;
+
+            disbtn.addEventListener('click',()=> {
+                socket.emit('leaveRoom')
+                window.location.reload(true)
+            })
             btn.addEventListener('click',()=> {
                 let name = document.getElementById('userin').value;
                 let room = document.getElementById('roomin').value;
@@ -102,12 +109,17 @@
                     const room_id = await getRoom({"user1":name,"user2":friend})
                     console.log(room_id)
                     const messages = await getAllChats(room_id)
-                   // let sender_room = name + users[i].innerText
-                    //let reciever_room = users[i].innerHTML + name
+                    let s = name + users[i].innerText
+                    let r = users[i].innerHTML + name
+                    if(previousRoom !== null) {
+                        socket.emit('leaveRoom',(previousRoom))
+                    }
                     buildMessageList(messages,name)
-                    socket.emit("join_one_to_one",{username:name,room_id:room_id})
+                    socket.emit("join_one_to_one",{username:name,room_id:room_id,s:s,r:r})
+                    previousRoom = room_id
                 })
             }
+
             async function getRoom(users) {
                 const response = await fetch("http://localhost:4000/participantsRoom",{
                     method:"POST",
