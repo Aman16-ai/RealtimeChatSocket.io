@@ -4,11 +4,11 @@ const userRooms = require('../../models/rooms')
 
 const createRoom = async(user1,user2) => {
     const room_id = uuid()
-    const room = await userRooms({
+    const room = new userRooms({
         room_id:room_id,
         participants:[user1,user2]
     })
-    room.save();
+    await room.save();
     return room;
 }
 module.exports = participantsRoom = async(req,res)=> {

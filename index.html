@@ -58,6 +58,7 @@
                 <div class="send-box">
                     <input id="messagein" placeholder="Enter message" type="text">
                     <button id="sendBtn">Send</button>
+                    <input id="mediain" type="file">
                 </div>
             </div>
         </div>
@@ -66,10 +67,17 @@
         <script>
             var socket = io();
             let previousRoom = null;
-
+            let media = null;
             disbtn.addEventListener('click',()=> {
                 socket.emit('leaveRoom')
                 window.location.reload(true)
+            })
+            mediain.addEventListener('change',(e)=> {
+                console.log("running")
+                media = e.target.files[0]
+                console.log(media)
+                const extension = media.name.substring(media.name.lastIndexOf('.')+1)
+                    console.log(extension)
             })
             btn.addEventListener('click',()=> {
                 let name = document.getElementById('userin').value;
@@ -87,10 +95,17 @@
 
             sendBtn.addEventListener('click',()=> {
                 let message = document.getElementById('messagein').value;
+                let messageObj = {message:message}
+                if(media !== null) {
+                    messageObj['media'] = media
+                    const extension = media.name.substring(media.name.lastIndexOf('.')+1)
+                    messageObj['extension'] = extension
+                    messageObj['filename'] = media.name
+                }
                 const p = document.createElement('p')
                 p.innerText = `Send By : You\n ${message}`
                 document.getElementById('message-container').appendChild(p)
-                socket.emit('send_message_one_to_one',message)
+                socket.emit('send_message_one_to_one',messageObj)
             })
             socket.on("received_message_one_to_one",(data)=> {
                 console.log(data)

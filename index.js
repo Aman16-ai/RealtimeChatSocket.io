@@ -5,6 +5,9 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv').config()
 const routes = require("./src/routes/mainRoutes")
 const { saveMessageToRoom } = require('./src/controllers/Chats/chatController')
+const fs = require('fs')
+const path = require('path')
+const saveMedia = require('./src/controllers/Chats/mediaController')
 const db_url = process.env.MONGODB
 const app = express();
 const server = http.createServer(app)
@@ -72,7 +75,21 @@ io.on('connection',(socket)=> {
         socket.on('send_message_one_to_one',async (data)=> {
             console.log(data)
             // const message = {sender:name,message:data}
-            const message = {sent_by:username,message:data}
+            const message = {sent_by:username,message:data.message}
+            if('media' in data) {
+                console.log()
+                const extension = data.extension
+                try {
+                    let reqpath = await uploadImage(data.filename,data.media)
+                    console.log("asyn await",reqpath)
+                    const media_id= await saveMedia(data.filename,reqpath)
+                    console.log(media_id)
+                    message['media_ids'] = media_id
+                }
+                catch(err) {
+                    console.log(err)
+                }
+            }
             await saveMessageToRoom(room_id,message)
             console.log("message go in ",room_id)
             // socket.to(sr).to(rr).emit("received_message_one_to_one",message)
@@ -89,5 +106,24 @@ io.on('connection',(socket)=> {
     
 
 })
+
+function uploadImage(filename,media) {
+    return new Promise((resolve,reject)=> {
+        let reqpath = path.resolve(__dirname, './uploads/' + new Date().getMilliseconds()+filename)
+                var writer = fs.createWriteStream(reqpath, {
+                    encoding: 'base64'
+                    });
+                    
+                    
+                    writer.write(media);
+                    writer.end();
+                    writer.on('finish',()=>{
+                        console.log('finish')
+                        console.log(reqpath)
+                        resolve(reqpath)
+                    })
+                    writer.on('error',(err)=> reject(err))
+    })
+}
 
 server.listen(4000,()=>console.log("Server running on 4000"))
