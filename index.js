@@ -4,7 +4,7 @@ const http = require('http')
 const mongoose = require('mongoose')
 const dotenv = require('dotenv').config()
 const routes = require("./src/routes/mainRoutes")
-const { saveMessageToRoom } = require('./src/controllers/Chats/chatController')
+const { saveMessageToRoom, addReactionToMessage, replyToMessage } = require('./src/controllers/Chats/chatController')
 const fs = require('fs')
 const path = require('path')
 const saveMedia = require('./src/controllers/Chats/mediaController')
@@ -71,13 +71,12 @@ io.on('connection',(socket)=> {
         const r = data.r
         // console.log(name,sr,rr)
         // socket.join([sr,rr])
-        socket.join(room_id)
+        socket.join([room_id,username])
         socket.on('send_message_one_to_one',async (data)=> {
             console.log(data)
             // const message = {sender:name,message:data}
             const message = {sent_by:username,message:data.message}
             if('media' in data) {
-                console.log()
                 const extension = data.extension
                 try {
                     let reqpath = await uploadImage(data.filename,data.media)
@@ -90,11 +89,21 @@ io.on('connection',(socket)=> {
                     console.log(err)
                 }
             }
-            await saveMessageToRoom(room_id,message)
+            const message_id = await saveMessageToRoom(room_id,message)
+            console.log('messageID',message_id)
+            if("reply_message_id" in data) {
+                await replyToMessage(data.reply_message_id,message_id)
+            }
             console.log("message go in ",room_id)
-            // socket.to(sr).to(rr).emit("received_message_one_to_one",message)
-            // socket.to(data.sender_room).emit("received_message_one_to_one",message)
+            message.message_id = message_id
             socket.to(room_id).emit('received_message_one_to_one',message)
+            io.to(username).emit('response',message)
+        })
+
+        socket.on('add-reaction',async(data)=> {
+            console.log(data)
+            await addReactionToMessage(data.messageId,data.reaction)
+            socket.to(room_id).emit('received-reaction',data)
         })
 
         socket.on('leaveRoom',()=> {

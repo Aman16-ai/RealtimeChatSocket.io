@@ -37,10 +37,33 @@ const saveMessageToRoom = async (room_id,message)=> {
             })
             newChat.save()
         }
+        return message_id
     }
     catch(err) {
         console.log("something went wrong")
     }
 }
 
-module.exports = {getRoomAllChats,saveMessageToRoom}
+const addReactionToMessage = async (message_id,reaction_id)=> {
+    try {
+        const message = await messages.findOne({message_id:message_id})
+        message.reaction_id = reaction_id
+        await message.save()
+        console.log(message)
+    }
+    catch(err) {
+        console.log(err)
+    }
+}
+
+const replyToMessage = async(message_id,reply_message_id)=>{
+    try {
+        const message = await messages.findOneAndUpdate({message_id:message_id},{reply_message_id:reply_message_id})
+        await message.save();
+        console.log(message)
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+module.exports = {getRoomAllChats,saveMessageToRoom,addReactionToMessage,replyToMessage}

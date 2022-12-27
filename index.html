@@ -68,10 +68,13 @@
             var socket = io();
             let previousRoom = null;
             let media = null;
+            let replyMessageId = null;
             disbtn.addEventListener('click',()=> {
                 socket.emit('leaveRoom')
                 window.location.reload(true)
             })
+
+            
             mediain.addEventListener('change',(e)=> {
                 console.log("running")
                 media = e.target.files[0]
@@ -102,19 +105,48 @@
                     messageObj['extension'] = extension
                     messageObj['filename'] = media.name
                 }
-                const p = document.createElement('p')
-                p.innerText = `Send By : You\n ${message}`
-                document.getElementById('message-container').appendChild(p)
+                if(replyMessageId !== null) {
+                    messageObj['reply_message_id'] = replyMessageId
+                }
+                //const p = document.createElement('p')
+                //p.innerText = `Send By : You\n ${message}`
+                //p.setAttribute('class','messagep')
+                //document.getElementById('message-container').appendChild(p)
                 socket.emit('send_message_one_to_one',messageObj)
+                replyMessageId = null
+            })
+            socket.on('response',(data)=> {
+                console.log('response ',data)
+                const p = document.createElement('p')
+                p.innerText = `Send By : You\n ${data.message}`
+                p.setAttribute('class','messagep')
+                p.setAttribute('id',data.message_id)
+                document.getElementById('message-container').appendChild(p)
             })
             socket.on("received_message_one_to_one",(data)=> {
                 console.log(data)
                 const p = document.createElement('p')
                 p.innerText = `Send By : ${data.sent_by}\n ${data.message}`
+                p.setAttribute('class','messagep')
+                p.setAttribute('id',data.message_id)
+                console.log(p)
+                const b = document.createElement('button')
+                b.setAttribute('class','pbtn')
+                b.setAttribute('messageId',data.message_id)
+                b.innerText = "Reply"
+                b.style.width = "8vw"
                 const messageContainer = document.getElementById('message-container');
                 messageContainer.appendChild(p);
+                messageContainer.appendChild(b)
+                addReactionListener()
+                addReplyButtonListener()
             })
 
+            socket.on('received-reaction',(data)=> {
+                console.log(data)
+                let messagep = document.getElementById(data.messageId);
+                messagep.innerText = messagep.innerText + "\n" + "Reaction: " + data.reaction
+            })
             const users = document.getElementsByClassName('user');
             for(let i = 0;i<users.length;i++) {
                 users[i].addEventListener('click',async()=> {
@@ -157,15 +189,51 @@
             }
             function buildMessageList(messages,currentUsername) {
                messages?.forEach((messageObj)=> {
-               // console.log(messageObj)
                 const p = document.createElement('p')
                 let sent_by = messageObj.sent_by
                 let message_text = messageObj.message
                 if(messageObj.sent_by === currentUsername) sent_by = "You"
                 p.innerText = `Send By : ${sent_by}\n ${message_text}`
+                if('reaction_id' in messageObj) {
+                   p.innerText = p.innerText + "\n Reaction : " + messageObj.reaction_id
+                }
+                p.setAttribute('class','messagep')
+                p.setAttribute('id',messageObj.message_id)
+                const b = document.createElement('button')
+                b.setAttribute('class','pbtn')
+                b.setAttribute('messageId',messageObj.message_id)
+                b.innerText = "Reply"
+                b.style.width = "8vw"
+                console.log(p)
                 const messageContainer = document.getElementById('message-container');
                 messageContainer.appendChild(p);
+                messageContainer.appendChild(b);
                })
+               addReactionListener()
+               addReplyButtonListener()
+            }
+            function addReplyButtonListener() {
+                const allBtns = document.getElementsByClassName('pbtn')
+                for(let i =0;i<allBtns.length;i++) {
+                    allBtns[i].addEventListener('click',()=> {
+                        replyMessageId = allBtns[i].getAttribute('messageId')
+                        console.log(replyMessageId)
+                    })
+                }
+            }
+            function addReactionListener() {
+                const messagep = document.getElementsByClassName('messagep')
+                for(let i =0;i<messagep.length;i++) {
+                    messagep[i].addEventListener('click',()=> {
+                        let reaction = prompt("Choose reaction")
+                        console.log("reaction is",reaction)
+                        if(reaction !== null && reaction !== undefined && reaction.length !== 0) {
+                            const messageId = messagep[i].getAttribute('id')
+                            messagep[i].innerText = messagep[i].innerText + "\n"+"Reaction : " + reaction
+                            socket.emit('add-reaction',{reaction:reaction,messageId:messageId})
+                        }
+                    })
+                }
             }
         </script>
 </body>
