@@ -62,6 +62,17 @@
                 </div>
             </div>
         </div>
+        lab
+        <button class="buser">aman</button>
+        <button class="buser">rahul</button>
+        <button class="buser">axat</button>
+        <button class="buser">vansh</button>
+        <button id="broadbtn">Create</button>
+        <h5>Your broadcast lists</h5>
+        <button id="fetchbtn">Fetch My broadcasts</button>
+        <div id="broad-container">
+
+        </div>
 
         <script src="/socket.io/socket.io.js"></script>
         <script>
@@ -69,6 +80,30 @@
             let previousRoom = null;
             let media = null;
             let replyMessageId = null;
+            const selectedUser = []
+            let blist = new Array()
+
+            fetchbtn.addEventListener('click',async()=> {
+                await getBroadCastList(document.getElementById('userin').value)
+                document.getElementById('broad-container').innerHTML = ""
+                buildBroadCastList()
+            })
+            const busers = document.getElementsByClassName('buser');
+            for(let i = 0;i<busers.length;i++) {
+                busers[i].addEventListener('click',async()=> {
+                   selectedUser.push(busers[i].innerText)
+                })
+            }
+
+
+            broadbtn.addEventListener("click",()=> {
+                console.log(selectedUser)
+                let name = document.getElementById('userin').value;
+                const obj = {"created_by":name,"participants":selectedUser}
+                console.log(obj)
+                createBroadCast(obj)
+            })
+
             disbtn.addEventListener('click',()=> {
                 socket.emit('leaveRoom')
                 window.location.reload(true)
@@ -167,6 +202,24 @@
                 })
             }
 
+            async function createBroadCast(obj) {
+                const response = await fetch("http://localhost:4000/createBroadCastList",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify(obj)
+                })
+                const data = await response.json()
+                console.log(data)
+                return data    
+            }
+            async function getBroadCastList(created_by) {
+                const response = await fetch(`http://localhost:4000/getBroadCastLists/${created_by}`)
+                const data = await response.json();
+                blist = data.response.allBroadCast
+                console.log(blist)
+            }
             async function getRoom(users) {
                 const response = await fetch("http://localhost:4000/participantsRoom",{
                     method:"POST",
@@ -212,6 +265,36 @@
                addReactionListener()
                addReplyButtonListener()
             }
+
+            function buildBroadCastList() {
+                blist.forEach((b,i)=> {
+                    const bl = document.createElement('button')
+                    bl.innerText = b.participants
+                    bl.setAttribute('id',i)
+                    bl.setAttribute('class','broadcastitem')
+                    console.log(bl)
+                    document.getElementById('broad-container').appendChild(bl)
+                    
+                })
+                addBroadListener()
+            }
+
+            function addBroadListener() {
+                const allbtns = document.getElementsByClassName('broadcastitem')
+                for(let i = 0;i<allbtns.length;i++) {
+                    allbtns[i].addEventListener('click',async()=> {
+                        console.log(blist)
+                        const name = document.getElementById('userin').value;
+                        const participants = blist[i].participants 
+                        participants.forEach(async(p)=> {
+                            const room_id = await getRoom({"user1":name,"user2":p})
+                            socket.emit("join_one_to_one",{username:name,room_id:room_id})
+                        })
+                        
+                    })
+                }
+            }
+            
             function addReplyButtonListener() {
                 const allBtns = document.getElementsByClassName('pbtn')
                 for(let i =0;i<allBtns.length;i++) {
